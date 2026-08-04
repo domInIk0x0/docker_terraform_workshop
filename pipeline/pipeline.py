@@ -1,0 +1,14 @@
+import sys
+import pandas as pd
+
+print('arguments', sys.argv)
+
+day = int((sys.argv[1]))
+print(f'Running piple for day {day}')
+
+
+df = pd.DataFrame({'A': [1, 2], 
+                   'B': [3, 4]})
+
+print(df.head())
+df.to_parquet(f'outputday_{day}.parquet')
