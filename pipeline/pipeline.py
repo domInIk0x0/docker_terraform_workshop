@@ -4,7 +4,7 @@ import pandas as pd
 print('arguments', sys.argv)
 
 day = int((sys.argv[1]))
-print(f'Running piple for day {day}')
+print(f'Running pipeline for day {day}')
 
 
 df = pd.DataFrame({'A': [1, 2], 
