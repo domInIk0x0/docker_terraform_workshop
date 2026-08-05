@@ -47,7 +47,90 @@ docker run -it \
     --entrypoint=bash \
     python:3.9.16-slim   (opcja -v tworzy wspoldzielony na zywo katalog pomiedzy urzadzeniem a kontenerem)
 
+docker image ls -a
+docker image rm (id obrazu)
+
 
 # 2. Virutal env
 uv init --python=3.13 (biblioteka)
 uv add pandas pyarrow --link-mode=copy
+uv run python pipeline.py 10  
+
+
+# 3. dockerizing pipeline
+FROM (definicja obrazu bazowego) (flaga --from pozwala kopiowac pliki z innego obrazu docker)
+RUN (wykonanie polecen ktore odbywaja sie podczas budowy kontenera)
+WORKDIR (katalog roboczy w ktorym beda wykonywane komendy)
+COPY (kopiowanie plikow z maszyny hosta do obrazu)
+ENTRYPOINT (polecenie ktore zostanie uruchomione w momencie uruchomienia kontenera)
+
+docker build -t test:pandas . (-t : Służy do nadania nazwy oraz opcjonalnej wersji obrazowi w formacie nazwa:tag.)
+                              (. wskazuje kontekst budowania (aktualny katalog w przypadku .) )
+
+docker build -f Dockerfile.dev -t pipeline:dev . (-f do wybrania konkretnego pliku Dockerfile)
+
+uzycie flagi --no-install-project w uv wymusza dzialanie wylacznie jako srodowisko wykonawcze. 
+
+
+
+
+# 4. postgres docker
+Utworzenie bazy postgree poprzez kontener
+ docker volume rm ny_taxi_postgres_data (usuwanie wolumenow)
+
+ Named Volume vs Bind Mount
+Named volume (name:/path): Managed by Docker, easier
+Bind mount (/host/path:/container/path): Direct mapping to host filesystem, more control
+
+
+docker run -it --rm \
+  -e POSTGRES_USER="root" \      (ustawienie zmiennej srodowiskowej wewnatrz kontenera)
+  -e POSTGRES_PASSWORD="root" \
+  -e POSTGRES_DB="ny_taxi" \
+  -v ny_taxi_postgres_data:/var/lib/postgresql/data \
+  -p 5433:5432 \         (przekierowanie ruchu sieciowego PORT_HOSTA:PORT_KONTENERA)
+  --name postgres_db \
+  postgres:18
+
+
+uv add --dev pgcli
+uv run pgcli -h localhost -p 5432 -u root -d ny_taxi
+
+Roznica pomiedzy NamedVolumed a bindMount
+
+Named Volume - tworzony i zarzadzany bezposrednio przez dockera w dedykowanym katalogu systemowym, lokalizacja ukryta w strukturze dockera
+
+Bindmount  - bezposrednie podpiecie istniejącego katalogu z dysku hosta.
+
+
+
+
+
+# 5 data ingestion 
+uv add --dev jupyter
+uv add ipykernel
+uv run python -m ipykernel install --user --name pipeline-venv --display-name "Python (.venv)"
+
+uv run jupyter notebook
+
+uv run jupyter nbconvert --to=script notebook.ipynb
+mv .\nyc_taxi_notebook.ipynb ingest_data.py
+
+
+utworzenie skryptu ktora wyczta dane i załaduje je chunkami do postgresa. 
+
+Biblioteka click do podawania parametrow skryptu:
+@click.command()
+@click.option('--pg-user', default='root', help='PostgreSQL user')
+@click.option('--pg-pass', default='root', help='PostgreSQL password')
+@click.option('--pg-host', default='localhost', help='PostgreSQL host')
+@click.option('--pg-port', default=5433, type=int, help='PostgreSQL port')
+@click.option('--pg-db', default='ny_taxi', help='PostgreSQL database name')
+@click.option(
+    '--target-table', default='yellow_taxi_data', help='Target table name'
+)
+def run(pg_user, pg_pass, pg_host, pg_port, pg_db, target_table):
+    pass
+
+    
+

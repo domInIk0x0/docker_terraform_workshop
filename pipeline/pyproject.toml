@@ -8,8 +8,12 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "ipykernel>=7.3.0",
     "pandas>=3.0.5",
+    "psycopg[binary,pool]>=3.3.4",
     "pyarrow>=25.0.0",
+    "sqlalchemy>=2.0.51",
+    "tqdm>=4.70.0",
 ]
 
 [project.scripts]
@@ -18,3 +22,9 @@ pipeline = "pipeline:main"
 [build-system]
 requires = ["uv_build>=0.12.1,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+    "pgcli>=4.5.0",
+]
