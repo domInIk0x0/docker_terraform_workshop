@@ -106,7 +106,7 @@ Bindmount  - bezposrednie podpiecie istniejącego katalogu z dysku hosta.
 
 
 
-# 5 data ingestion 
+# 5,6 data ingestion 
 uv add --dev jupyter
 uv add ipykernel
 uv run python -m ipykernel install --user --name pipeline-venv --display-name "Python (.venv)"
@@ -132,5 +132,27 @@ Biblioteka click do podawania parametrow skryptu:
 def run(pg_user, pg_pass, pg_host, pg_port, pg_db, target_table):
     pass
 
-    
 
+
+# 7. pgadmin
+
+docker network create pg-network
+
+docker run -it -d   -e POSTGRES_USER="root"   -e POSTGRES_PASSWORD="root"   -e POSTGRES_DB="ny_taxi"   -v ny_taxI_postgres_data:/var/lib/postgresql   -p 5433:5432   --network=pg-network   --name pgdatabase   postgres:18
+
+docker run -it -d\
+  -e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+  -e PGADMIN_DEFAULT_PASSWORD="root" \
+  -v pgadmin_data:/var/lib/pgadmin \
+  -p 8085:80 \
+  --network=pg-network \
+  --name pgadmin \
+  dpage/pgadmin4
+
+
+  # 8 dockerazing ingestion
+  docker build -f Dockerfile.ingestion -t pipe:ingestion .
+  docker run -it --network=pg-network  pipe:ingestion --pg-host=pgdatabase --pg-po
+rt=5432
+
+# 9
