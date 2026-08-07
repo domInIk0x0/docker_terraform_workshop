@@ -219,3 +219,25 @@ __marimo__/
 
 
 *.parquet
+
+
+.terraform/
+
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+*.tfvars
+*.tfvars.json
+
+!terraform.tfvars.example
+
+override.tf
+override.tf.json
+*_override.tf
+*.log
+crash.log
+crash.*.log
+
+.terraformrc
+terraform.rc
