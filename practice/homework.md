@@ -195,7 +195,13 @@ Given a running PostgreSQL container named `postgres`:
 
 **My answer:**
 ```bash
-# Paste your commands here:
+docker run -itd -p 5433:5432 --name=postgres --rm \
+-e POSTGRES_PASSWORD=sec123 \
+postgres:17-alpine
+
+
+docker exec -it postgres psql -U postgres
+SELECT datname FROM pg_database;
 
 ```
 
@@ -209,7 +215,25 @@ Given a running PostgreSQL container named `postgres`:
 
 **My answer:**
 ```bash
-# Paste your commands here:
+docker network create demo_network
+docker network ls
+
+docker run -itd --name=app1 --network=demo_network python:3.9.16-slim
+docker run -itd --name=app2 --network=demo_network python:3.9.16-slim 
+
+docker network inspect demo_network
+Containers": {
+            "d998da30b2b3f56f4d45ebd423d83eb44e59c1863509a40f4e4316b9d80fb582": {
+                "Name": "app1",
+                "EndpointID": "ea9dbe972804eff3a2d0fa668560b45dd4f7b05d5e8fe1cdadbb213e2b4010b1",
+                "MacAddress": "4a:dc:8f:2a:ba:c1",
+                "IPv4Address": "172.20.0.2/16",
+                "IPv6Address": ""
+            }
+
+docker exec -it app2 bash
+apt-get update && apt-get install -y iputils-ping
+ping 172.20.0.2  ping app1
 
 ```
 
@@ -221,8 +245,11 @@ What is the `terraform.tfstate` file? Why should you **never** edit it manually 
 
 **My answer:**
 ```markdown
-# Write your explanation here:
+The **`terraform.tfstate`** file is Terraform's state file, which maps our infrastructure configuration to real-world cloud resources and tracks their metadata. It is generated after executing commands that alter resources like `terraform apply`.
 
+We should never edit this file manually because manual modifications risk corrupting internal metadata and creating state drift, which can lead to unpredictable behavior or accidental resource destruction during subsequent runs.
+
+Additionally, committing it to Git repositories must be avoided because the file stores sensitive data like passwords, API keys, and private certificates in plain text, while also creating severe merge conflicts and lack of state locking in collaborative environments.
 ```
 
 ---
@@ -235,7 +262,17 @@ Write a simple `main.tf` file or HCL snippet that:
 
 **My answer:**
 ```hcl
-# Paste your HCL code here:
+
+
+main.tf
+variable "project_id" {
+  default = "my-gcp-project"
+  type = string
+}
+
+output "project_id" {
+  value = var.project_id
+}
 
 ```
 
@@ -249,8 +286,8 @@ Which two Terraform CLI commands are used to:
 
 **My answer:**
 ```bash
-# Paste your commands here:
-
+terraform fmt
+terraform validate
 ```
 
 ---
@@ -261,7 +298,9 @@ What is the difference between an **implicit dependency** and an **explicit depe
 
 **My answer:**
 ```markdown
-# Write your explanation here:
+An **implicit dependency** is created automatically by Terraform when one resource references an attribute of another in its configuration (e.g., `vpc_id = aws_vpc.main.id`), allowing Terraform to infer the correct build order. An **explicit dependency** is manually defined by the developer using the `depends_on` argument to force a specific order when no direct code reference exists between the resources.
+
+We must explicitly use `depends_on` when two resources depend on each other in the real cloud environment, but Terraform cannot detect this relationship through attribute references alone—such as waiting for an IAM policy attachment (`aws_iam_role_policy_attachment`) to take effect before creating a service (like a Lambda ) that relies on those permissions.
 
 ```
 
@@ -273,8 +312,7 @@ You have a Terraform state containing 10 resources, but you want to run `terrafo
 
 **My answer:**
 ```bash
-# Paste your command here:
-
+terraform apply -target="google_bigquery_dataset.stg_dataset"
 ```
 
 ---
@@ -285,6 +323,8 @@ What are the primary advantages of using a remote backend (e.g., Google Cloud St
 
 **My answer:**
 ```markdown
-# Write your explanation here:
+sing a remote backend eliminates local storage risks by providing a centralized source of truth for team collaboration, native state encryption, automatic version history, and seamless integration with CI/CD pipelines.
+
+State locking is a safety feature that temporarily locks the remote state file during execution so that only one user or pipeline can modify infrastructure at a time, preventing simultaneous writes and catastrophic state corruption.
 
 ```
